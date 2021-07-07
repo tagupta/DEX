@@ -31,6 +31,10 @@ contract Wallet is Ownable{
        instance.transferFrom(msg.sender, address(this), _amount);
    
    }
+
+   function depositETH() public payable{
+      balances[msg.sender]["ETH"] += msg.value;
+    }
    
    function withdraw(uint _amount,bytes32 _ticker)external tokenExist(_ticker){
         require(balances[msg.sender][_ticker] >= _amount,"Wallet: insufficient balance");
