@@ -109,7 +109,21 @@ contract Dex is Wallet{
         //make sure that buyer has enough eth to buy tokens
          Order[] storage orders = orderBook[ticker][1]; //limit order sell book to get maximum selling price
         if(orders.length > 0){
-            require(balances[msg.sender]["ETH"] >= amount * orders[orders.length-1].price,"Insufficient ETH to buy");
+            //require(balances[msg.sender]["ETH"] >= amount * orders[orders.length-1].price,"Insufficient ETH to buy");
+            uint minEther = 0;
+            uint _amount = amount ;// amount used in function parameter
+            for(uint i = 0 ; i < orders.length ; i++){
+                if(_amount >= orders[i].amount){
+                     _amount -= orders[i].amount;
+                     minEther += orders[i].price * orders[i].amount;
+                }else if(_amount < orders[i].amount){
+                    minEther += orders[i].price * _amount;
+                    _amount = 0;
+                    break;
+                }
+            }
+            require(balances[msg.sender]["ETH"] >= minEther, "Insufficient ETH in your wallet");
+
         }
         else{
             require(balances[msg.sender]["ETH"] >= 100000,"Should keep your wallet heavy");
