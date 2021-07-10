@@ -26,7 +26,7 @@ contract Wallet is Ownable{
    
    function deposit(uint _amount,bytes32 _ticker) external tokenExist(_ticker){
        IERC20 instance = IERC20(tokenMapping[_ticker].tokenAddress);
-       require(instance.balanceOf(msg.sender) >= _amount);
+       require(instance.balanceOf(msg.sender) >= _amount,"Deposit balance in your token contract");
        balances[msg.sender][_ticker] += _amount;
        instance.transferFrom(msg.sender, address(this), _amount);
    

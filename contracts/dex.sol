@@ -69,5 +69,83 @@ contract Dex is Wallet{
          _counterIds.increment();
    }
 
+   function createMarketOrder(Side side, bytes32 ticker, uint amount) public {
+    
+    if(Side.SELL == side){
+        require(amount <= balances[msg.sender][ticker],"Insufficent tokens to sell");
+        Order[] storage orders = orderBook[ticker][0]; //Buy order book
+
+        while(amount > 0 && orders.length > 0){
+         if(amount >= orders[0].amount){
+             //updating the amount for seller
+             Order memory temp = orders[0];
+             amount -= temp.amount; //left amount
+             balances[msg.sender]["ETH"] += (temp.price * temp.amount); // depositing eth in the account of seller
+             balances[msg.sender][ticker] -= temp.amount; // withdrawing tickers from the account of seller
+             balances[temp.trader]["ETH"] -= (temp.price * temp.amount); // reducing eth from the acccount of buyer
+             balances[temp.trader][ticker] += temp.amount; //adding ticker to the account of buyer
+             temp.amount = 0;
+             orders[0] = temp;
+             //deleting the fulfilled order from buy order book by shifting rows to the front
+             for(uint j = 0 ; j < orders.length-1 ; j++){
+                 orders[j] = orders[j+1];
+             }
+             orders.pop(); // removing the last duplicate row
+          
+         }
+         else if(amount < orders[0].amount){
+             Order memory temp = orders[0];
+             temp.amount -= amount;
+             balances[msg.sender]["ETH"] += temp.price * amount;
+             balances[msg.sender][ticker] -= amount; //should become 0
+             balances[temp.trader]["ETH"] -= temp.price * amount;
+             balances[temp.trader][ticker] += amount;
+             amount = 0;
+             orders[0] = temp;
+         }
+     }
+    }
+    else if(Side.BUY == side){
+        //make sure that buyer has enough eth to buy tokens
+         Order[] storage orders = orderBook[ticker][1]; //limit order sell book to get maximum selling price
+        if(orders.length > 0){
+            require(balances[msg.sender]["ETH"] >= amount * orders[orders.length-1].price,"Insufficient ETH to buy");
+        }
+        else{
+            require(balances[msg.sender]["ETH"] >= 100000,"Should keep your wallet heavy");
+        }
+ 
+        while(amount > 0 && orders.length > 0){
+            if(amount >= orders[0].amount){
+               Order memory temp = orders[0];
+               amount -= temp.amount;
+               balances[msg.sender][ticker] += temp.amount ;//buyer
+               balances[msg.sender]["ETH"] -= temp.price * temp.amount; // buyer
+               balances[temp.trader][ticker] -= temp.amount; // seller
+               balances[temp.trader]["ETH"] += temp.price * temp.amount; //seller
+               temp.amount = 0;
+               orders[0] = temp;
+
+               //deleting the fulfilled order from sell order book by shifting rows to the front
+                for(uint j = 0 ; j < orders.length-1 ; j++){
+                    orders[j] = orders[j+1];
+                }
+                orders.pop(); // removing the last duplicate row
+            }
+            else if(amount < orders[0].amount){
+                Order memory temp = orders[0];
+                temp.amount -= amount;
+                balances[msg.sender][ticker] += amount ;//buyer
+                balances[msg.sender]["ETH"] -= temp.price * amount; // buyer
+                balances[temp.trader][ticker] -= amount; // seller
+                balances[temp.trader]["ETH"] += temp.price * amount; //seller
+                amount = 0;
+                orders[0] = temp;
+            }
+        } 
+    }
+
+   }
+
     
 }

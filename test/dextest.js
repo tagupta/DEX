@@ -2,7 +2,7 @@ const Dex = artifacts.require("Dex");
 const Link = artifacts.require("Link");
 const truffleAssert = require('truffle-assertions');
 
-contract("Dex - Order Book",async accounts =>{
+contract.skip("Dex - Order Book",async accounts =>{
   it("deposited ETH must be more than the buy order value", async ()=>{
     let dex = await Dex.deployed();
 
@@ -49,11 +49,12 @@ contract("Dex - Order Book",async accounts =>{
     await link.approve(dex.address,1000);
     await dex.deposit(500,web3.utils.fromUtf8("LINK"));
 
-    await dex.createLimitOrder(1,web3.utils.fromUtf8("LINK"),1, 13);
-    await dex.createLimitOrder(1,web3.utils.fromUtf8("LINK"),1, 10);
-    await dex.createLimitOrder(1,web3.utils.fromUtf8("LINK"),1, 9);
+    await dex.createLimitOrder(1,web3.utils.fromUtf8("LINK"),1, 13); //sell limit order
+    await dex.createLimitOrder(1,web3.utils.fromUtf8("LINK"),2, 13); //sell limit order
+    await dex.createLimitOrder(1,web3.utils.fromUtf8("LINK"),1, 9);  //sell limit order
 
     const sellList = await dex.getOrderBook(web3.utils.fromUtf8("LINK"),1);
+    console.log(sellList);
     assert(sellList.length > 0,"Sell order book should not be empty");
     sellList.every(function (x, i) {
         assert(i === 0 || x.price >= sellList[i - 1].price,"Sell order book not in correct order");
