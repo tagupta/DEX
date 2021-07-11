@@ -17,6 +17,7 @@ contract("Dex - Market Orders",async accounts => {
     let dex = await Dex.deployed();
 
     const balance = await dex.balances(accounts[0],web3.utils.fromUtf8("ETH"));
+  
     assert.equal(balance.toNumber(),0,"Initial ETH balance is 0");
 
     await truffleAssert.reverts(dex.createMarketOrder(0,web3.utils.fromUtf8("LINK"),35)); //buy market order
@@ -50,14 +51,20 @@ contract("Dex - Market Orders",async accounts => {
     await dex.depositETH({value: 1000,from: accounts[1]});
        
     await dex.createLimitOrder(0,web3.utils.fromUtf8("LINK"),10, 9,{from: accounts[1]}); //buy limit order
+    await dex.createLimitOrder(0,web3.utils.fromUtf8("LINK"),10, 9,{from: accounts[1]});
+    await dex.createLimitOrder(0,web3.utils.fromUtf8("LINK"),10, 9,{from: accounts[1]});
+    
+    var linkBefore = await dex.balances(accounts[0],web3.utils.fromUtf8("LINK"));
 
-    await truffleAssert.passes(dex.createMarketOrder(1,web3.utils.fromUtf8("LINK"),35,{from: accounts[0]}));//sell market order
+    await truffleAssert.passes(dex.createMarketOrder(1,web3.utils.fromUtf8("LINK"),30,{from: accounts[0]}));//sell market order
+    
     const buyList = await dex.getOrderBook(web3.utils.fromUtf8("LINK"),0);
     assert(buyList.length == 0);
 
-    var balance = await dex.balances(accounts[0],web3.utils.fromUtf8("LINK"));
-    assert(balance == 100-10,"token balance of the seller should decrease with the filled amounts");
-    //accounts[0] => 90 LINK
+    var linkAfter = await dex.balances(accounts[0],web3.utils.fromUtf8("LINK"));
+
+    assert(linkAfter == (linkBefore-30),"token balance of the seller should decrease with the filled amounts");
+  
   });
 
   it("market buy order should be filled until the sell order book is empty or order is 100% filled",async () => {
