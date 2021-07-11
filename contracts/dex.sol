@@ -19,6 +19,11 @@ contract Dex is Wallet{
        bytes32 ticker;
        uint amount;
        uint price;
+       bool filled;
+   }
+
+   function getBalance(bytes32 ticker) public view returns (uint256) {
+       return balances[msg.sender][ticker];
    }
    
    mapping(bytes32 => mapping(uint => Order[]))public orderBook;
@@ -39,7 +44,7 @@ contract Dex is Wallet{
 
         uint256 newCounterId = _counterIds.current();
         Order[] storage orders = orderBook[ticker][uint(side)];
-        orders.push(Order(newCounterId,msg.sender,side,ticker,amount,price));
+        orders.push(Order(newCounterId,msg.sender,side,ticker,amount,price, false));
          
         uint j =  orders.length > 0 ? orders.length-1 : 0;
          if(side == Side.BUY){
@@ -108,31 +113,20 @@ contract Dex is Wallet{
     else if(Side.BUY == side){
         //make sure that buyer has enough eth to buy tokens
          Order[] storage orders = orderBook[ticker][1]; //limit order sell book to get maximum selling price
-        if(orders.length > 0){
-            //require(balances[msg.sender]["ETH"] >= amount * orders[orders.length-1].price,"Insufficient ETH to buy");
-            uint minEther = 0;
-            uint _amount = amount ;// amount used in function parameter
-            for(uint i = 0 ; i < orders.length ; i++){
-                if(_amount >= orders[i].amount){
-                     _amount -= orders[i].amount;
-                     minEther += orders[i].price * orders[i].amount;
-                }else if(_amount < orders[i].amount){
-                    minEther += orders[i].price * _amount;
-                    _amount = 0;
-                    break;
-                }
-            }
-            require(balances[msg.sender]["ETH"] >= minEther, "Insufficient ETH in your wallet");
-
-        }
-        else{
-            require(balances[msg.sender]["ETH"] >= 100000,"Should keep your wallet heavy");
-        }
- 
+        // if(orders.length > 0){
+        //     require(balances[msg.sender]["ETH"] >= amount * orders[orders.length-1].price,"Insufficient ETH to buy");
+        // }
+        // else{
+        //     require(balances[msg.sender]["ETH"] >= 100000,"Should keep your wallet heavy");
+        // }
         while(amount > 0 && orders.length > 0){
+            uint i = 0;
+            require(balances[msg.sender]["ETH"] > orders[i].price * orders[i].amount);
+ 
             if(amount >= orders[0].amount){
                Order memory temp = orders[0];
                amount -= temp.amount;
+               temp.filled = true;
                balances[msg.sender][ticker] += temp.amount ;//buyer
                balances[msg.sender]["ETH"] -= temp.price * temp.amount; // buyer
                balances[temp.trader][ticker] -= temp.amount; // seller
@@ -141,10 +135,10 @@ contract Dex is Wallet{
                orders[0] = temp;
 
                //deleting the fulfilled order from sell order book by shifting rows to the front
-                for(uint j = 0 ; j < orders.length-1 ; j++){
-                    orders[j] = orders[j+1];
-                }
-                orders.pop(); // removing the last duplicate row
+                // for(uint j = 0 ; j < orders.length-1 ; j++){
+                //     orders[j] = orders[j+1];
+                // }
+                // orders.pop(); // removing the last duplicate row
             }
             else if(amount < orders[0].amount){
                 Order memory temp = orders[0];
@@ -156,6 +150,12 @@ contract Dex is Wallet{
                 amount = 0;
                 orders[0] = temp;
             }
+
+            if (orders[i].filled) {
+                orders[i] = orders[orders.length - 1];
+                orders.pop();
+            }
+            i++;
         } 
     }
 
