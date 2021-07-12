@@ -2,6 +2,7 @@
 pragma solidity >=0.4.22 <0.9.0;
 import '../node_modules/@openzeppelin/contracts/access/Ownable.sol';
 import '../node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol';
+// import '../node_modules/@openzeppelin/contracts/utils/Context.sol';
 
 contract Wallet is Ownable{
 
@@ -26,20 +27,20 @@ contract Wallet is Ownable{
    
    function deposit(uint _amount,bytes32 _ticker) external tokenExist(_ticker){
        IERC20 instance = IERC20(tokenMapping[_ticker].tokenAddress);
-       require(instance.balanceOf(msg.sender) >= _amount,"Deposit balance in your token contract");
-       balances[msg.sender][_ticker] += _amount;
-       instance.transferFrom(msg.sender, address(this), _amount);
+       require(instance.balanceOf(_msgSender()) >= _amount,"Deposit balance in your token contract");
+       balances[_msgSender()][_ticker] += _amount;
+       instance.transferFrom(_msgSender(), address(this), _amount);
    
    }
 
    function depositETH() public payable{
-      balances[msg.sender]["ETH"] += msg.value;
+      balances[_msgSender()]["ETH"] += msg.value;
     }
    
    function withdraw(uint _amount,bytes32 _ticker)external tokenExist(_ticker){
-        require(balances[msg.sender][_ticker] >= _amount,"Wallet: insufficient balance");
-        balances[msg.sender][_ticker] -= _amount;
-        IERC20(tokenMapping[_ticker].tokenAddress).transfer(msg.sender, _amount);
+        require(balances[_msgSender()][_ticker] >= _amount,"Wallet: insufficient balance");
+        balances[_msgSender()][_ticker] -= _amount;
+        IERC20(tokenMapping[_ticker].tokenAddress).transfer(_msgSender(), _amount);
    }
    
 }

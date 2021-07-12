@@ -31,15 +31,15 @@ contract Dex is Wallet{
  
    function createLimitOrder(Side side,bytes32 ticker,uint amount, uint price) public{
       if(side == Side.BUY){
-          require(balances[msg.sender]["ETH"] >= amount * price,'Cost exdeeds the ETH balance');
+          require(balances[_msgSender()]["ETH"] >= amount * price,'Cost exdeeds the ETH balance');
       }
       else if(side == Side.SELL){
-          require(balances[msg.sender][ticker] >= amount,'Insufficient tokens to sell');
+          require(balances[_msgSender()][ticker] >= amount,'Insufficient tokens to sell');
       }
 
         uint256 newCounterId = _counterIds.current();
         Order[] storage orders = orderBook[ticker][uint(side)];
-        orders.push(Order(newCounterId,msg.sender,side,ticker,amount,price));
+        orders.push(Order(newCounterId,_msgSender(),side,ticker,amount,price));
          
         uint j =  orders.length > 0 ? orders.length-1 : 0;
          if(side == Side.BUY){
@@ -87,19 +87,19 @@ contract Dex is Wallet{
    function createMarketOrder(Side side, bytes32 ticker, uint amount) public {
 
      if(Side.SELL == side){
-        require(amount <= balances[msg.sender][ticker],"Insufficent tokens to sell");
+        require(amount <= balances[_msgSender()][ticker],"Insufficent tokens to sell");
         Order[] storage orders = orderBook[ticker][0]; //Buy order book
 
         while(amount > 0 && orders.length > 0){
          if(amount >= orders[0].amount){
              amount -= orders[0].amount; 
-             settleTrade(orders[0],orders[0].amount, msg.sender,orders[0].trader,ticker);
+             settleTrade(orders[0],orders[0].amount, _msgSender(),orders[0].trader,ticker);
              orders[0].amount = 0;
              deleteFilledOrder(orders);
          }
          else if(amount < orders[0].amount){
              orders[0].amount -= amount;
-             settleTrade(orders[0],amount,msg.sender,orders[0].trader,ticker);
+             settleTrade(orders[0],amount,_msgSender(),orders[0].trader,ticker);
              amount = 0;
          }
        }
@@ -109,21 +109,21 @@ contract Dex is Wallet{
         Order[] storage orders = orderBook[ticker][1]; //limit order sell book 
         
         if(orders.length <= 0){
-            require(balances[msg.sender]["ETH"] >= 10000,"Please keep min ETH in your wallet");
+            require(balances[_msgSender()]["ETH"] >= 10000,"Please keep min ETH in your wallet");
         }
         else {
             while(amount > 0 && orders.length > 0){
             if(amount >= orders[0].amount){
-               require(balances[msg.sender]["ETH"] >= orders[0].amount * orders[0].price,"Insufficient ETH in your wallet");
+               require(balances[_msgSender()]["ETH"] >= orders[0].amount * orders[0].price,"Insufficient ETH in your wallet");
                amount -= orders[0].amount;
-               settleTrade(orders[0],orders[0].amount, orders[0].trader,msg.sender,ticker);
+               settleTrade(orders[0],orders[0].amount, orders[0].trader,_msgSender(),ticker);
                orders[0].amount = 0;
                deleteFilledOrder(orders);
             }
             else if(amount < orders[0].amount){
-                require(balances[msg.sender]["ETH"] >= amount * orders[0].price,"Insufficient ETH in your wallet");
+                require(balances[_msgSender()]["ETH"] >= amount * orders[0].price,"Insufficient ETH in your wallet");
                 orders[0].amount -= amount;
-                settleTrade(orders[0],amount,orders[0].trader,msg.sender,ticker);
+                settleTrade(orders[0],amount,orders[0].trader,_msgSender(),ticker);
                 amount = 0;
             }
           } 
