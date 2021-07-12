@@ -129,8 +129,5 @@ contract Dex is Wallet{
           } 
         }
       }
-
-   }
-
-    
+   }  
 }
