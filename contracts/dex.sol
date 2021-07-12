@@ -76,6 +76,13 @@ contract Dex is Wallet{
         balances[buyer]["ETH"] -= cost; 
         balances[buyer][_ticker] += amt; 
    }
+   
+   function deleteFilledOrder(Order[] storage orders) private{
+      for(uint j = 0 ; j < orders.length-1 ; j++){
+                orders[j] = orders[j+1];
+            }
+      orders.pop(); 
+   }
 
    function createMarketOrder(Side side, bytes32 ticker, uint amount) public {
 
@@ -85,17 +92,10 @@ contract Dex is Wallet{
 
         while(amount > 0 && orders.length > 0){
          if(amount >= orders[0].amount){
-             //updating the amount for seller
-             amount -= orders[0].amount; //left amount
+             amount -= orders[0].amount; 
              settleTrade(orders[0],orders[0].amount, msg.sender,orders[0].trader,ticker);
              orders[0].amount = 0;
-             
-             //deleting the fulfilled order from buy order book by shifting elements to the front
-             for(uint j = 0 ; j < orders.length-1 ; j++){
-                 orders[j] = orders[j+1];
-             }
-             orders.pop(); 
-          
+             deleteFilledOrder(orders);
          }
          else if(amount < orders[0].amount){
              orders[0].amount -= amount;
@@ -114,23 +114,14 @@ contract Dex is Wallet{
         else {
             while(amount > 0 && orders.length > 0){
             if(amount >= orders[0].amount){
-
                require(balances[msg.sender]["ETH"] >= orders[0].amount * orders[0].price,"Insufficient ETH in your wallet");
-               
                amount -= orders[0].amount;
                settleTrade(orders[0],orders[0].amount, orders[0].trader,msg.sender,ticker);
                orders[0].amount = 0;
-
-               //deleting the fulfilled order from sell order book by shifting elements to the front
-                for(uint j = 0 ; j < orders.length-1 ; j++){
-                    orders[j] = orders[j+1];
-                }
-                orders.pop(); 
+               deleteFilledOrder(orders);
             }
             else if(amount < orders[0].amount){
-
                 require(balances[msg.sender]["ETH"] >= amount * orders[0].price,"Insufficient ETH in your wallet");
-            
                 orders[0].amount -= amount;
                 settleTrade(orders[0],amount,orders[0].trader,msg.sender,ticker);
                 amount = 0;
