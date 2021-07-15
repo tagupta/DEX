@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity >=0.4.22 <0.9.0;
 import './wallet.sol';
 import '../node_modules/@openzeppelin/contracts/utils/Counters.sol';
 
-// add market type to order attrbiute
-//
+
 contract Dex is Wallet{
 
     using Counters for Counters.Counter; 
@@ -52,12 +52,12 @@ contract Dex is Wallet{
    }
  
    function createLimitOrder(Side side,bytes32 ticker,uint amount, uint price) public{
-      if(side == Side.BUY){
-          require(balances[_msgSender()]["ETH"] >= amount * price,'Cost exdeeds the ETH balance');
-      }
-      else if(side == Side.SELL){
-          require(balances[_msgSender()][ticker] >= amount,'Insufficient tokens to sell');
-      }
+        if(side == Side.BUY){
+            require(balances[_msgSender()]["ETH"] >= amount * price,'Cost exdeeds the ETH balance');
+        }
+        else if(side == Side.SELL){
+            require(balances[_msgSender()][ticker] >= amount,'Insufficient tokens to sell');
+        }
 
         uint256 newCounterId = _counterIds.current();
         Order[] storage orders = orderBook[ticker][uint(side)];
@@ -90,20 +90,21 @@ contract Dex is Wallet{
             }
             settleOrder(orders, marketOrderBook[ticker][0], ticker, side);
          }
-         _counterIds.increment();
-         
-        }
-   }
+          _counterIds.increment();
+    }
+ 
    
 
+   
+   
    function createMarketOrder(Side side, bytes32 ticker, uint amount) public {
     
         if(Side.SELL == side){
             require(amount <= balances[msg.sender][ticker],"Insufficent tokens to sell");
         
-            uint256 newCounterId = _marketIds.current();
+            uint newCounterId = _marketIds.current();
             marketOrder[] storage marketOrders = marketOrderBook[ticker][1];
-            Order[] storage orders = orderBook[ticker][0];
+            // Order[] storage orders = orderBook[ticker][0];
             marketOrders.push(marketOrder(newCounterId,msg.sender,side,ticker,amount, false));
 
             settleOrder(orderBook[ticker][0], marketOrderBook[ticker][1], ticker, side);
@@ -112,7 +113,7 @@ contract Dex is Wallet{
             
             uint256 newCounterId = _marketIds.current();
             marketOrder[] storage marketOrders = marketOrderBook[ticker][0];
-            Order[] storage orders = orderBook[ticker][1]; 
+            // Order[] storage orders = orderBook[ticker][1]; 
             marketOrders.push(marketOrder(newCounterId,msg.sender,side,ticker,amount, false));
 
             settleOrder(orderBook[ticker][1], marketOrderBook[ticker][0], ticker, side);
