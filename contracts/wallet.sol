@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.4.22 <0.9.0;
-import '../node_modules/@openzeppelin/contracts/access/Ownable.sol';
-import '../node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol';
-// import '../node_modules/@openzeppelin/contracts/utils/Context.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
-contract Wallet is Ownable{
+
+contract MyWallet is Ownable{
 
   struct Token{
       bytes32 ticker;
