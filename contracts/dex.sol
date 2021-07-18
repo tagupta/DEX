@@ -32,8 +32,7 @@ contract Dex is MyWallet{
        uint amount;
        bool filled;
    }
-
-
+   
    mapping(bytes32 => mapping(uint => Order[]))public orderBook;
    mapping(bytes32 => mapping(uint => marketOrder[]))public marketOrderBook;
    Counters.Counter private _counterIds;
@@ -98,7 +97,6 @@ contract Dex is MyWallet{
          }
           _counterIds.increment();
     }
- 
    
    function createMarketOrder(Side side, bytes32 ticker, uint amount) public {
     
@@ -118,7 +116,6 @@ contract Dex is MyWallet{
             
         }
         else if(Side.BUY == side){
-            
             uint newCounterId = _marketIds.current();
             marketOrder[] storage marketOrders = marketOrderBook[ticker][0];
             Order[] storage orders = orderBook[ticker][1]; 
@@ -200,7 +197,7 @@ contract Dex is MyWallet{
             marketOrders.pop();
     }
    }
-
+   
    function settleTrade(Order memory temp, uint amt, address seller, address buyer,bytes32 _ticker) private{
         uint cost = temp.price * amt;
         balances[seller]["ETH"] += cost; 
