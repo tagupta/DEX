@@ -10,7 +10,7 @@ For installation of [openZeppelin](https://docs.openzeppelin.com/contracts/4.x/)
 $ npm install @openzeppelin/contracts
 ```
 
-To assert the statements in test cases, I'm using a library called **truffle assertions**.To install it, you the below command in your terminal -
+To assert the statements in test cases, I'm using a library called **truffle assertions**.To install it, use the below command in your terminal -
 ```
 $ npm install truffle-assertions
 ```
